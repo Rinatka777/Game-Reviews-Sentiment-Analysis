@@ -1,0 +1,49 @@
+# --- OS (macOS)
+.DS_Store
+
+# --- Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+.eggs/
+.Python
+pip-wheel-metadata/
+build/
+develop-eggs/
+dist/
+wheels/
+share/python-wheels/
+*.manifest
+*.spec
+.installed.cfg
+
+# --- Virtual envs
+.venv/
+venv/
+ENV/
+env/
+
+# --- Jupyter / notebooks
+.ipynb_checkpoints/
+
+# --- Testing / coverage / mypy
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.pytype/
+
+# --- Tools / editors
+.idea/
+.vscode/
+
+# --- Logs / misc
+*.log
+
+# --- Environment files (add if you use them)
+.env
+.env.*
