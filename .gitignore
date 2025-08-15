@@ -56,3 +56,8 @@ htmlcov/
 
 # Ignore raw dataset file
 data/raw/dataset.csv
+
+# ignore datasets and IDE stuff
+data/
+.idea/
+
