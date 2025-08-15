@@ -47,3 +47,12 @@ htmlcov/
 # --- Environment files (add if you use them)
 .env
 .env.*
+
+# Ignore PyCharm project settings
+.idea/modules.xml
+.idea/profile_settings.xml
+.idea/vcs.xml
+.idea/workspace.xml
+
+# Ignore raw dataset file
+data/raw/dataset.csv
