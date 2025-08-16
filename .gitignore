@@ -58,6 +58,5 @@ htmlcov/
 data/raw/dataset.csv
 
 # ignore datasets and IDE stuff
-data/
 .idea/
 
