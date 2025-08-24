@@ -9,8 +9,8 @@ def normalize_spaces(s:str) -> str:
     return _WS_RE.sub(" ", s).strip()
 
 def replace_urls_and_users(s:str) -> str:
-    s1 = _URL_RE.sub("<url", s)
-    s2 = _USER_RE.sub("<user", s1)
+    s1 = _URL_RE.sub(" <url> ", s)
+    s2 = _USER_RE.sub(" <user> ", s1)
     return s2
 
 def clean_text(s:str, mode:Literal["tfidf", "transformer"] = "tfidf") -> str:
@@ -27,5 +27,9 @@ def clean_text(s:str, mode:Literal["tfidf", "transformer"] = "tfidf") -> str:
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
-    #continue with other small functions
+if __name__ == "__main__":
+    print(clean_text("Check THIS: https://store.steampowered.com  @Dev_Team  👍  \n New line"
+, "tfidf"))
+    print(clean_text("Check THIS: https://store.steampowered.com  @Dev_Team  👍  \n New line"
+, "transformer"))
 
