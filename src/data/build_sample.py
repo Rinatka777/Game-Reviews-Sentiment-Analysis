@@ -115,6 +115,40 @@ def main() -> None:
 
     print(f"Collected -> class0={got_0}, class1={got_1}, target_each={per_class_target}")
 
+    df0 = pd.concat(buf_0, ignore_index=True) if buf_0 else pd.DataFrame(columns=["text", "label"])
+    df1 = pd.concat(buf_1, ignore_index=True) if buf_1 else pd.DataFrame(columns=["text", "label"])
+
+    min_class = min(len(df0), len(df1))
+    if min_class == 0:
+        raise ValueError(f"One class is empty. class0={len(df0)}, class1={len(df1)}")
+
+    if len(df0) > min_class:
+        df0 = df0.sample(n=min_class, random_state=args.seed)
+    if len(df1) > min_class:
+        df1 = df1.sample(n=min_class, random_state=args.seed)
+
+    sample = pd.concat([df0, df1], ignore_index=True)
+    sample = sample.sample(frac=1.0, random_state=args.seed).reset_index(drop=True)
+
+    print(f"[step10] combined={len(sample)} | class0={len(df0)} | class1={len(df1)}")
+    print(f"[step10] pos_rate={float(sample['label'].mean()):.3f}")
+    print(f"[step10] avg_len={float(sample['text'].astype(str).str.len().mean()):.1f}")
+
+    if list(sample.columns) != ["text", "label"]:
+        raise ValueError(f"Unexpected columns: {list(sample.columns)}")
+    if not sample["label"].dropna().isin([0, 1]).all():
+        raise ValueError("Labels must be strictly 0 or 1")
+
+    n0 = int((sample["label"] == 0).sum())
+    n1 = int((sample["label"] == 1).sum())
+    if n0 != n1:
+        raise ValueError(f"Classes not balanced: class0={n0}, class1={n1}")
+
+    print(f"[step10] Contract OK → total={len(sample)}, per_class={n0}")
+
+    train_set = sample.iloc[len(sample) * 0.8]
+    test_set = (len(sample) - train_set) // 2
+    val_set = sample.iloc[len(sample) * 0.8 + test_set:]
 
 if __name__ == "__main__":
     main()
