@@ -1,6 +1,7 @@
 import argparse
 import os
 from typing import Iterable, Optional, Tuple, List
+from sklearn.model_selection import train_test_split
 
 import pandas as pd
 from src.utils.io import (
@@ -146,9 +147,32 @@ def main() -> None:
 
     print(f"[step10] Contract OK → total={len(sample)}, per_class={n0}")
 
-    train_set = sample.iloc[len(sample) * 0.8]
-    test_set = (len(sample) - train_set) // 2
-    val_set = sample.iloc[len(sample) * 0.8 + test_set:]
+    x = sample["text"]
+    y = sample["label"]
+
+    X_train, X_temp, y_train, y_temp = train_test_split(
+        X, y,
+        test_size=0.20,
+        stratify=y,
+        random_state=args.seed,
+    )
+
+    X_valid, X_test, y_valid, y_test = train_test_split(
+        X_temp, y_temp,
+        test_size=0.50,
+        stratify=y_temp,
+        random_state=args.seed,
+    )
+
+    train = pd.DataFrame({"text": X_train, "label": y_train})
+    valid = pd.DataFrame({"text": X_valid, "label": y_valid})
+    test = pd.DataFrame({"text": X_test, "label": y_test})
+
+    def pos_rate(df):
+        return float(df["label"].mean())
+
+    print(f"train={len(train)} valid={len(valid)} test={len(test)}")
+    print(f"pos_rate train={pos_rate(train):.3f} valid={pos_rate(valid):.3f} test={pos_rate(test):.3f}")
 
 if __name__ == "__main__":
     main()
