@@ -151,7 +151,7 @@ def main() -> None:
     y = sample["label"]
 
     X_train, X_temp, y_train, y_temp = train_test_split(
-        X, y,
+        x, y,
         test_size=0.20,
         stratify=y,
         random_state=args.seed,
@@ -173,6 +173,20 @@ def main() -> None:
 
     print(f"train={len(train)} valid={len(valid)} test={len(test)}")
     print(f"pos_rate train={pos_rate(train):.3f} valid={pos_rate(valid):.3f} test={pos_rate(test):.3f}")
+
+    train["text"] = train["text"].astype(str)
+    valid["text"] = valid["text"].astype(str)
+    test["text"] = test["text"].astype(str)
+    train["label"] = train["label"].astype("int8")
+    valid["label"] = valid["label"].astype("int8")
+    test["label"] = test["label"].astype("int8")
+
+    out_dir = args.out_dir
+    out_train = os.path.join(out_dir, "train.parquet")
+    out_valid = os.path.join(out_dir, "valid.parquet")
+    out_test = os.path.join(out_dir, "test.parquet")
+
+    #step 12.3
 
 if __name__ == "__main__":
     main()
