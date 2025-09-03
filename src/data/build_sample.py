@@ -187,6 +187,7 @@ def main() -> None:
     out_test = os.path.join(out_dir, "test.parquet")
 
     #step 12.3
+    #https://www.kaggle.com/datasets/andrewmvd/steam-reviews?resource=download
 
 if __name__ == "__main__":
     main()
