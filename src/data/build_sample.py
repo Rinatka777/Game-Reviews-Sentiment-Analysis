@@ -7,8 +7,9 @@ import pandas as pd
 from src.utils.io import (
     seed_everything,
     iter_paths,
-    stream_read,
+    stream_read, ensure_dir, save_parquet,
 )
+from src.utils.io import seed_everything, iter_paths, stream_read, save_parquet, ensure_dir, file_size_mb
 
 TEXT_CANDS: List[str] = ["review", "review_text", "text", "content", "body"]
 LABEL_CANDS: List[str] = ["recommended", "label", "sentiment", "rating", "score", "target"]
@@ -174,20 +175,50 @@ def main() -> None:
     print(f"train={len(train)} valid={len(valid)} test={len(test)}")
     print(f"pos_rate train={pos_rate(train):.3f} valid={pos_rate(valid):.3f} test={pos_rate(test):.3f}")
 
-    train["text"] = train["text"].astype(str)
-    valid["text"] = valid["text"].astype(str)
-    test["text"] = test["text"].astype(str)
+    train["text"] = train["text"].astype("string")
+    valid["text"] = valid["text"].astype("string")
+    test["text"] = test["text"].astype("string")
+
     train["label"] = train["label"].astype("int8")
     valid["label"] = valid["label"].astype("int8")
     test["label"] = test["label"].astype("int8")
 
     out_dir = args.out_dir
-    out_train = os.path.join(out_dir, "train.parquet")
-    out_valid = os.path.join(out_dir, "valid.parquet")
-    out_test = os.path.join(out_dir, "test.parquet")
+    ensure_dir(out_dir)
 
-    #step 12.3
-    #https://www.kaggle.com/datasets/andrewmvd/steam-reviews?resource=download
+    saved = []
+    for name, df in [("train", train), ("valid", valid), ("test", test)]:
+        path = os.path.join(out_dir, f"{name}.parquet")
+        tmp = path + ".tmp"
+        save_parquet(df, tmp)
+        os.replace(tmp, path)
+        saved.append((name, path))
+
+    for name, path in saved:
+        print(f"Saved: {path} ({len(pd.read_parquet(path))} rows)  |  size ~ {file_size_mb(path)} MB")
+
+    def pos_rate(df: pd.DataFrame) -> float:
+        return float(df["label"].mean())
+
+    def avg_len(df: pd.DataFrame) -> float:
+        return float(df["text"].astype(str).str.len().mean())
+
+    train_path = os.path.join(args.out_dir, "train.parquet")
+    valid_path = os.path.join(args.out_dir, "valid.parquet")
+    test_path = os.path.join(args.out_dir, "test.parquet")
+
+    train_chk = pd.read_parquet(train_path, columns=["text", "label"])
+    valid_chk = pd.read_parquet(valid_path, columns=["text", "label"])
+    test_chk = pd.read_parquet(test_path, columns=["text", "label"])
+
+    print(f"Train: {len(train_chk):>7} | pos_rate={pos_rate(train_chk):.3f} | avg_len={avg_len(train_chk):.1f}")
+    print(f"Valid: {len(valid_chk):>7} | pos_rate={pos_rate(valid_chk):.3f} | avg_len={avg_len(valid_chk):.1f}")
+    print(f"Test : {len(test_chk):>7} | pos_rate={pos_rate(test_chk):.3f} | avg_len={avg_len(test_chk):.1f}")
+    print("Saved →")
+    print(" ", train_path)
+    print(" ", valid_path)
+    print(" ", test_path)
+
 
 if __name__ == "__main__":
     main()
