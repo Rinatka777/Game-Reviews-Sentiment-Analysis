@@ -60,3 +60,15 @@ data/raw/dataset.csv
 # ignore datasets and IDE stuff
 .idea/
 
+# data
+data/
+!data/raw/README.md   # optional: keep a stub readme so the folder exists
+
+# models
+models/
+!models/README.md     # optional: keep a stub readme here too
+
+
+
+
+
