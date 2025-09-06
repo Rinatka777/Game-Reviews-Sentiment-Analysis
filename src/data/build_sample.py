@@ -12,7 +12,11 @@ from src.utils.io import (
 from src.utils.io import seed_everything, iter_paths, stream_read, save_parquet, ensure_dir, file_size_mb
 
 TEXT_CANDS: List[str] = ["review", "review_text", "text", "content", "body"]
-LABEL_CANDS: List[str] = ["recommended", "label", "sentiment", "rating", "score", "target"]
+LABEL_CANDS: List[str] = [
+    "recommended", "voted_up", "review_score",
+    "label", "sentiment", "rating", "score", "target"
+]
+
 
 
 def get_args() -> argparse.Namespace:
@@ -26,10 +30,18 @@ def get_args() -> argparse.Namespace:
 
 
 def detect_column(df: pd.DataFrame, candidates: Iterable[str]) -> Optional[str]:
+    col_map = {c.strip(): c for c in df.columns}
+    lower_index = {c.strip().lower(): c for c in df.columns}
+
     for name in candidates:
-        if name in df.columns:
-            return name
+        if name.lower() in lower_index:
+            return lower_index[name.lower()]
+    for name in candidates:
+        for lc, original in lower_index.items():
+            if name.lower() in lc:
+                return original
     return None
+
 
 
 def find_columns_from_first_chunk(files: List[str], chunksize: int = 10_000) -> Tuple[str, str]:
@@ -63,12 +75,31 @@ def clip_to_need(df_class: pd.DataFrame, need: int, seed: int) -> pd.DataFrame:
         return df_class
     return df_class.sample(n=need, random_state=seed)
 
+def coerce_label_to_binary(s: pd.Series) -> pd.Series:
+    if s.dtype == bool:
+        return s.astype(int)
+
+    if pd.api.types.is_numeric_dtype(s):
+        return (s.astype(float) > 0).astype("int8")
+
+    lowered = s.astype(str).str.strip().str.lower()
+    pos = {"recommended", "positive", "pos", "true", "yes", "y", "1"}
+    neg = {"not recommended", "negative", "neg", "false", "no", "n", "0"}
+    out = pd.Series(pd.NA, index=s.index, dtype="Int8")
+    out[lowered.isin(pos)] = 1
+    out[lowered.isin(neg)] = 0
+
+    return out.astype("Int8")
+
 
 def normalize_chunk(chunk: pd.DataFrame, text_col: str, label_col: str) -> pd.DataFrame:
     chunk = chunk.dropna(subset=[text_col, label_col]).copy()
-    chunk[label_col] = chunk[label_col].astype(int)
+    chunk[label_col] = coerce_label_to_binary(chunk[label_col])
+    chunk = chunk.dropna(subset=[label_col])
+    chunk[label_col] = chunk[label_col].astype("int8")
     chunk = filter_lengths(chunk, text_col)
     return chunk[[text_col, label_col]].rename(columns={text_col: "text", label_col: "label"})
+
 
 
 def main() -> None:
